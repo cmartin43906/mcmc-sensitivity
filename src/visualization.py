@@ -71,3 +71,54 @@ def plot_sensitivity_with_signal(t, y_clean, A_sensitivity_t, B_sensitivity_t):
 
     plt.tight_layout()
     plt.show()
+
+def plot_mcmc_traces(A_chain, B_chain, logL_chain):
+    fig, axes = plt.subplots(3, 1, figsize=(10, 7), sharex=True)
+
+    axes[0].plot(A_chain, linewidth=1)
+    axes[0].axhline(3.25, color="red", linestyle="--", label="True A")
+    axes[0].set_ylabel("A")
+    axes[0].legend()
+
+    axes[1].plot(B_chain, linewidth=1)
+    axes[1].axhline(22.0, color="red", linestyle="--", label="True B")
+    axes[1].set_ylabel("B")
+    axes[1].legend()
+
+    axes[2].plot(logL_chain, linewidth=1)
+    axes[2].set_ylabel("logL")
+    axes[2].set_xlabel("MCMC step")
+
+    plt.tight_layout()
+    plt.show()
+
+    burn = 1000
+    A_post = A_chain[burn:]
+    B_post = B_chain[burn:]
+
+    plt.figure(figsize=(5, 5))
+    plt.scatter(A_post, B_post, s=6, alpha=0.3)
+    plt.axvline(3.25, color="red", linestyle="--")
+    plt.axhline(22.0, color="red", linestyle="--")
+    plt.xlabel("A")
+    plt.ylabel("B")
+    plt.title("Joint Posterior Samples")
+    plt.tight_layout()
+    plt.show()
+
+    plt.figure(figsize=(10, 4))
+
+    plt.subplot(1, 2, 1)
+    plt.hist(A_post, bins=40, density=True)
+    plt.axvline(3.25, color="red", linestyle="--")
+    plt.xlabel("A")
+    plt.title("Posterior of A")
+
+    plt.subplot(1, 2, 2)
+    plt.hist(B_post, bins=40, density=True)
+    plt.axvline(22.0, color="red", linestyle="--")
+    plt.xlabel("B")
+    plt.title("Posterior of B")
+
+    plt.tight_layout()
+    plt.show()
