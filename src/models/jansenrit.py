@@ -1,5 +1,8 @@
 import numpy as np
 from scipy.integrate import solve_ivp
+from config import T_END
+
+# reused from neural mass modeling reduction of Jansen-Rit
 
 
 def sigmoid(v, e0=2.5, v0=6.0, r=0.56):
@@ -36,14 +39,14 @@ def jansen_rit(t, y, p=120.0, A=3.25, B=22.0, a=100.0, b=50.0, C=135.0):
     y0, y1, y2, y3, y4, y5 = y
 
     # internal coupling scaling constants for populations
-    C1 = C  
-    C2 = 0.8 * C  
-    C3 = 0.25 * C 
-    C4 = 0.25 * C  
+    C1 = C
+    C2 = 0.8 * C
+    C3 = 0.25 * C
+    C4 = 0.25 * C
 
     dy0 = y3
-    dy1 = y4  
-    dy2 = y5  
+    dy1 = y4
+    dy2 = y5
 
     # y1 - y2 is the net synaptic input to the pyramidal cells
     dy3 = A * a * sigmoid(y1 - y2) - 2 * a * y3 - (a**2) * y0
@@ -58,7 +61,7 @@ def jansen_rit(t, y, p=120.0, A=3.25, B=22.0, a=100.0, b=50.0, C=135.0):
     return [dy0, dy1, dy2, dy3, dy4, dy5]
 
 
-def solve_jr(t_end=2.0, sf=1000, params=None, y0_init=None):
+def solve_jr(t_end=T_END, sf=1000, params=None, y0_init=None):
     """
     sf = 1000 # sampling frequency 1000Hz
     t_end = how long the sim will run for
@@ -83,7 +86,7 @@ def solve_jr(t_end=2.0, sf=1000, params=None, y0_init=None):
     y0_init = np.zeros(6)
 
     def jr_rhs(t, y):
-        return jansen_rit(t , y, **params)
+        return jansen_rit(t, y, **params)
 
     sol = solve_ivp(
         fun=jr_rhs,
@@ -94,10 +97,9 @@ def solve_jr(t_end=2.0, sf=1000, params=None, y0_init=None):
 
     return sol
 
-def simulate_observation(params=None, t_end=4.0, sf=1000):
+
+def simulate_observation(params=None, t_end=T_END, sf=1000):
     sol = solve_jr(t_end=t_end, sf=sf, params=params)
     t = sol.t
-    eeg_proxy = sol.y[1] - sol.y[2]  
+    eeg_proxy = sol.y[1] - sol.y[2]
     return t, eeg_proxy
-
-

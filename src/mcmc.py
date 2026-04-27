@@ -1,10 +1,11 @@
 from models.jansenrit import simulate_observation
+from config import T_END, SF, num_steps, init_params, step_sizes
 
 import numpy as np
 
 # likelihood needs guess params, noisy data, and noise level sigma
 
-def likelihood(params, observed_noisy, sigma, t_end=4.0, sf=1000):
+def likelihood(params, observed_noisy, sigma, t_end=T_END, sf=SF):
 
     # simulate using guesses
     t, y_sim = simulate_observation(params=params, t_end=t_end, sf=sf)
@@ -17,7 +18,13 @@ def likelihood(params, observed_noisy, sigma, t_end=4.0, sf=1000):
 
     return log_likelihood
 
-def run_mcmc(observed_noisy, sigma, num_steps=5000, init_params=None, step_sizes=None):
+def run_mcmc(
+    observed_noisy,
+    sigma,
+    num_steps=num_steps,
+    init_params=init_params,
+    step_sizes=step_sizes,
+):
     """
     observed_noisy = observed data we are inferring from
     sigma = noise std
@@ -26,8 +33,9 @@ def run_mcmc(observed_noisy, sigma, num_steps=5000, init_params=None, step_sizes
     step_size = how big each random step should be
     """
 
+    # default vals for testing
     if init_params is None:
-        init_params = {"A": 3.2, "B":21.5}
+        init_params = {"A": 2.75, "B": 25.0}  # 3.2, 21.5
     if step_sizes is None:
         step_sizes = {"A": 0.007, "B": 0.03}
 
@@ -63,20 +71,21 @@ def run_mcmc(observed_noisy, sigma, num_steps=5000, init_params=None, step_sizes
 
         alpha = candidate_logL - current_logL
 
+        # if higher likelihood, accept
         if alpha >= 0:
             curr_params = candidates
             current_logL = candidate_logL
             n_accept += 1
-        else:
+        else:  # don't accept
             if np.log(np.random.rand()) < alpha:
                 curr_params = candidates
                 current_logL = candidate_logL
                 n_accept += 1
 
+        # place whatever we decided on in the chain
         A_chain[i] = curr_params["A"]
         B_chain[i] = curr_params["B"]
         logL_chain[i] = current_logL
-
 
     acceptance_rate = n_accept / (num_steps - 1)
     return A_chain, B_chain, logL_chain, acceptance_rate
